@@ -1,26 +1,21 @@
 package connect
 
 import (
-	"net"
-	"time"
-	"fmt"
 	"crypto/tls"
+	"fmt"
+	"net"
 	"strconv"
-	"io"
+	"time"
 )
 
-func RequestTCPRaw(host string, port int, withTls bool, content []byte) ([]byte, error) {
-
+func RequestTCPRaw(host string, port int, withTls bool, content []byte, readStrategy func(net.Conn) ([]byte, error)) ([]byte, error) {
 	address := net.JoinHostPort(host, strconv.Itoa(port))
 	
 	var conn net.Conn
 	var err error
 
-	// configure tls if needed and establish the connection
 	if withTls {
-		conf := &tls.Config{
-			ServerName: host,
-		}
+		conf := &tls.Config{InsecureSkipVerify: false, ServerName: host}
 		conn, err = tls.Dial("tcp", address, conf)
 	} else {
 		conn, err = net.DialTimeout("tcp", address, 5*time.Second)
@@ -31,19 +26,10 @@ func RequestTCPRaw(host string, port int, withTls bool, content []byte) ([]byte,
 	}
 	defer conn.Close()
 
-	// send the payload
 	conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
-	_, err = conn.Write(content)
-	if err != nil {
+	if _, err = conn.Write(content); err != nil {
 		return nil, fmt.Errorf("write error: %w", err)
 	}
 
-	// read the payload
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	response, err := io.ReadAll(conn)
-	if err != nil {
-		return nil, fmt.Errorf("read error: %w", err)
-	}
-
-	return response, nil
+	return readStrategy(conn)
 }
