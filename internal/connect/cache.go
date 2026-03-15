@@ -4,13 +4,14 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
-	"time"
-	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type GetFunc func(url string, body []byte, headers map[string]string) (*HttpResponse, error)
@@ -75,51 +76,52 @@ func (c *FileCache) tryGet(cacheFile string) *HttpResponse {
 		return nil
 	}
 
+	slog.Info(fmt.Sprintf("Cache hit for %s, valid until %s", cacheFile, entry.ValidUntil.Format(time.RFC1123)))
 	return entry.Response
 }
 
 func (c *FileCache) doCache(cacheFile string, resp *HttpResponse) {
-    headers := resp.Headers
-    
-    // Default: do not cache unless we find a directive
-    var duration time.Duration = 0
+	headers := resp.Headers
 
-    if val, ok := headers["Cache-Control"]; ok {
-        // Look for max-age=<seconds>
-        if strings.Contains(val, "no-store") || strings.Contains(val, "private") {
-            return // Respect "no-store" or "private" by not caching
-        }
+	// Default: do not cache unless we find a directive
+	var duration time.Duration = 0
 
-        // Use a regex or string splitting to find max-age
-        re := regexp.MustCompile(`max-age=(\d+)`)
-        matches := re.FindStringSubmatch(val)
-        if len(matches) > 1 {
-            seconds, _ := strconv.Atoi(matches[1])
-            duration = time.Duration(seconds) * time.Second
-        }
-    }
+	if val, ok := headers["Cache-Control"]; ok {
+		// Look for max-age=<seconds>
+		if strings.Contains(val, "no-store") || strings.Contains(val, "private") {
+			return // Respect "no-store" or "private" by not caching
+		}
 
-    // Fallback to Expires header if max-age is missing
-    if duration == 0 {
-        if expVal, ok := headers["Expires"]; ok {
-            if expTime, err := http.ParseTime(expVal); err == nil {
-                duration = time.Until(expTime)
-            }
-        }
-    }
+		// Use a regex or string splitting to find max-age
+		re := regexp.MustCompile(`max-age=(\d+)`)
+		matches := re.FindStringSubmatch(val)
+		if len(matches) > 1 {
+			seconds, _ := strconv.Atoi(matches[1])
+			duration = time.Duration(seconds) * time.Second
+		}
+	}
 
-    if duration <= 0 {
-        return // Don't cache if no valid duration is found
-    }
+	// Fallback to Expires header if max-age is missing
+	if duration == 0 {
+		if expVal, ok := headers["Expires"]; ok {
+			if expTime, err := http.ParseTime(expVal); err == nil {
+				duration = time.Until(expTime)
+			}
+		}
+	}
 
-    entry := CacheEntry{
-        ValidUntil: time.Now().Add(duration),
-        Response:   resp,
-    }
+	if duration <= 0 {
+		return // Don't cache if no valid duration is found
+	}
 
-    if data, err := json.Marshal(entry); err == nil {
-        os.WriteFile(cacheFile, data, 0644)
-    }
+	entry := CacheEntry{
+		ValidUntil: time.Now().Add(duration),
+		Response:   resp,
+	}
+
+	if data, err := json.Marshal(entry); err == nil {
+		os.WriteFile(cacheFile, data, 0644)
+	}
 }
 
 func simplifyURL(url string) string {

@@ -2,11 +2,13 @@ package html
 
 import (
 	"bytes"
-	"github.com/PuerkitoBio/goquery"
-	"strings"
 	"go2web/internal/connect"
-	"golang.org/x/net/html" 
+	"log/slog"
 	"regexp"
+	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/net/html"
 )
 
 func ParsePage(url string, withCache bool) (string, error) {
@@ -15,6 +17,7 @@ func ParsePage(url string, withCache bool) (string, error) {
     var err error
 
     if withCache {
+        slog.Debug("Using cache")
         cache := connect.NewFileCache("cache")
         cachedGet := cache.WithCache(connect.Get)
         res, err = cachedGet(url, nil, map[string]string{})
