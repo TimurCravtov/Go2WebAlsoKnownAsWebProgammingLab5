@@ -1,14 +1,13 @@
 package main
 
 import (
-	"go2web/internal/html"
 	"fmt"
+	"go2web/internal/html/search_engines"
 	"github.com/0magnet/calvin"
 )
 
 func main() {
-	
-	engine := html.NewBingSearchEngine("https://www.bing.com/search?q=")
+	engine := search_engines.NewBingSearchEngine("https://www.bing.com/search?q=")
 	response, err := engine.Search("cats")
 
 	fmt.Println(calvin.AsciiFont("BING")) 
