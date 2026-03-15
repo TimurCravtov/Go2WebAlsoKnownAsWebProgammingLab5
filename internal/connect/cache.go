@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-type GetFunc func(url string, body []byte, headers map[string]string) (*HttpResponse, error)
 
 type CacheEntry struct {
 	ValidUntil time.Time     `json:"valid_until"`

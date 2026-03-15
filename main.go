@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"go2web/internal/connect"
 	"go2web/internal/html"
 	"log/slog"
-	"time"
 	"os"
+	"time"
+
 	"github.com/lmittmann/tint"
 )
 
@@ -27,12 +29,17 @@ func main() {
 	// }
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
-        Level:      slog.LevelInfo,
-        TimeFormat: time.Kitchen,
-    }))
-    
-    slog.SetDefault(logger)
+		Level:      slog.LevelInfo,
+		TimeFormat: time.Kitchen,
+	}))
 
-	fmt.Println(html.ParsePage("https://www.point.md", true, true))
+	slog.SetDefault(logger)
+
+	cache := connect.NewFileCache("cache")
+
+	cachedGet := cache.WithCache(connect.Get)
+	redirectGet := connect.WithRedirects(cachedGet)
+
+	fmt.Println(html.ParsePage("https://point.md", redirectGet))
 
 }
