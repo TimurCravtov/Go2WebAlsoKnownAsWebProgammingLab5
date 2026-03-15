@@ -6,16 +6,28 @@ import (
 	"strings"
 	"go2web/internal/connect"
 	"golang.org/x/net/html" 
+    "time"
 	"regexp"
 )
 
-func ParsePage(url string) (string, error) {
+func ParsePage(url string, withCache bool) (string, error) {
 
-    var headers = map[string]string{
+    var res *connect.HttpResponse
+    var err error
+
+    if withCache {
+        cache := connect.NewFileCache("cache", 10*time.Minute)
+        cachedGet := cache.WithCache(connect.Get)
+        res, err = cachedGet(url, nil, map[string]string{})
+    } else {
+
+        var headers = map[string]string{
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        }      
+        res, err = connect.Get(url, nil, headers)
     }
 
-    res, err := connect.Get(url, nil, headers)
+
     if err != nil {
         return "", err
     }
