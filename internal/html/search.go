@@ -1,5 +1,7 @@
 package html
 
+import "go2web/internal/connect"
+
 type SearchResult struct {
 	Title   string
 	URL     string
@@ -7,5 +9,5 @@ type SearchResult struct {
 }
 
 type Search interface {
-	Search(query string) ([]SearchResult, error)
+	Search(query string, get connect.GetFunc) ([]SearchResult, error)
 }
