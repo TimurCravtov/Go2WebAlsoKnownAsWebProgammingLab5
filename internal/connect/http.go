@@ -207,7 +207,7 @@ func ParseRawToResponse(raw []byte) (*HttpResponse, error) {
 		}
 	}
 
-	fmt.Println("Headers:", resp.Headers)
+	// fmt.Println("Headers:", resp.Headers)
 
 	body, err := io.ReadAll(reader)
 	if err != nil {
