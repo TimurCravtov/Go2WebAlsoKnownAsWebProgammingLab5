@@ -5,8 +5,9 @@ import (
 	"go2web/internal/connect"
 	"go2web/internal/html"
 	"go2web/internal/html/search_engines"
-	"strings"
 	"go2web/internal/printer"
+	"strings"
+
 	"github.com/0magnet/calvin"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -70,8 +71,8 @@ func HandleSearch(cmd *cobra.Command, args []string) {
 	// print results
 	for i, result := range results {
 		fmt.Printf("%d. %s\n", i+1, result.Title)
-		fmt.Printf("   URL: %s\n", html.Colorize(result.URL, html.ColorBlue))
-		fmt.Println("   " + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─")
+		fmt.Printf("  URL: %s\n", html.Colorize(result.URL, html.ColorBlue))
+		fmt.Println("  " + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─")
 	}
 }
 
@@ -152,9 +153,7 @@ func (m searchModel) View() string {
 		sb.WriteString(fmt.Sprintf("  Error: %v\n", m.err))
 
 	case m.selected != nil:
-		// ── Placeholder "page" after selection ──────────────────────────────
-		sb.WriteString(renderSelectedPlaceholder(m.selected))
-
+		// do nothing
 	default:
 		visibleResults := 5
 		heroLines := strings.Count(m.hero, "\n") + 1
@@ -223,21 +222,6 @@ func buildHero(engineName, query string) string {
 	return title + "\n" + box
 }
 
-func renderSelectedPlaceholder(r *html.SearchResult) string {
-	separator := strings.Repeat("═", 50)
-	return fmt.Sprintf(
-		"\n  %s\n\n"+
-			"  %s\n"+
-			"  %s\n\n"+
-			"  [ Placeholder — page content would load here ]\n\n"+
-			"  %s\n",
-		html.Colorize("OPENED RESULT", html.ColorCyan),
-		html.Colorize(r.Title, html.ColorReset),
-		html.Colorize(r.URL, html.ColorBlue),
-		separator,
-	)
-}
-
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 func HandleSearchDynamic(cmd *cobra.Command, args []string) {
@@ -270,11 +254,9 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 
 	if fm, ok := final.(searchModel); ok && fm.selected != nil {
 
-	
 		getter := connect.Get
 		getter = connect.WithRedirects(getter, 5)
 		getter = connect.NewFileCache("cache").WithCache(getter)
-
 
 		response, err := getter(fm.selected.URL, nil, nil)
 		if err != nil {
@@ -283,8 +265,8 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 		}
 
 		printer := printer.WithHeaders(printer.WithHero(printer.HtmlResponseParser))
-		
-		str, _ := printer(fm.selected.URL, response);
+
+		str, _ := printer(fm.selected.URL, response)
 
 		fmt.Printf("%s\n\n",
 			str,
