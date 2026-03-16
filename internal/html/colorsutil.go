@@ -2,7 +2,7 @@ package html
 
 import "regexp"
 
-func colorizeURLs(text string) string {
+func ColorizeURLs(text string) string {
 
 	reURL := regexp.MustCompile(`https?://[^\s)]+`)
 

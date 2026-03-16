@@ -6,7 +6,7 @@ import (
 	"go2web/internal/html"
 	"go2web/internal/html/search_engines"
 	"strings"
-
+	"go2web/internal/printer"
 	"github.com/0magnet/calvin"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -270,19 +270,24 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 
 	if fm, ok := final.(searchModel); ok && fm.selected != nil {
 
-		page, httpRes, err := html.ParsePage(fm.selected.URL, connect.Get)
+	
+		getter := connect.Get
+		getter = connect.WithRedirects(getter, 5)
+		getter = connect.NewFileCache("cache").WithCache(getter)
+
+
+		response, err := getter(fm.selected.URL, nil, nil)
 		if err != nil {
 			fmt.Printf("Error fetching page: %v\n", err)
 			return
 		}
 
-		heroText := buildWebsiteHero(httpRes, fm.selected.URL)
-		if heroText != "" {
-			fmt.Println(heroText)
-		}
+		printer := printer.WithHeaders(printer.WithHero(printer.HtmlResponseParser))
+		
+		str, _ := printer(fm.selected.URL, response);
 
 		fmt.Printf("%s\n\n",
-			page,
+			str,
 		)
 	}
 }
