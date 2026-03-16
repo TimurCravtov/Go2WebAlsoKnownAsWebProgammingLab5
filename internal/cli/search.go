@@ -270,10 +270,15 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 
 	if fm, ok := final.(searchModel); ok && fm.selected != nil {
 
-		page, err := html.ParsePage(fm.selected.URL, connect.Get)
+		page, httpRes, err := html.ParsePage(fm.selected.URL, connect.Get)
 		if err != nil {
 			fmt.Printf("Error fetching page: %v\n", err)
 			return
+		}
+
+		heroText := buildWebsiteHero(httpRes, fm.selected.URL)
+		if heroText != "" {
+			fmt.Println(heroText)
 		}
 
 		fmt.Printf("%s\n\n",

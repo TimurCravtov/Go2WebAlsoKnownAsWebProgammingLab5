@@ -10,24 +10,24 @@ import (
 	"github.com/jaytaylor/html2text"
 )
 
-func ParsePage(pageURL string, get connect.GetFunc) (string, error) {
+func ParsePage(pageURL string, get connect.GetFunc) (string, *connect.HttpResponse, error) {
 	headers := map[string]string{
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
 	}
 	res, err := get(pageURL, nil, headers)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	reader := bytes.NewReader(res.Body)
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	baseURL, err := url.Parse(pageURL)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	doc.Find("script, style, iframe, noscript, nav, footer, .sidebar, .menu").Remove()
@@ -51,7 +51,7 @@ func ParsePage(pageURL string, get connect.GetFunc) (string, error) {
 
 	htmlContent, err := selection.Html()
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	text, err := html2text.FromString(htmlContent, html2text.Options{
@@ -59,10 +59,10 @@ func ParsePage(pageURL string, get connect.GetFunc) (string, error) {
 		OmitLinks:    false,
 	})
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	coloredText := colorizeURLs(text)
 
-	return strings.TrimSpace(coloredText), nil
+	return strings.TrimSpace(coloredText), res, nil
 }
