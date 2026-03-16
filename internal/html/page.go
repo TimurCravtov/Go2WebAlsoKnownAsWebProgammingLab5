@@ -5,6 +5,7 @@ import (
 	"go2web/internal/connect"
 	"net/url"
 	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jaytaylor/html2text"
 )

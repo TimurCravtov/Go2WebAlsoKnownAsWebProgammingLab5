@@ -12,7 +12,7 @@ func WithRedirects(next GetFunc) GetFunc {
 		}
 
 		if slices.Contains([]int{301, 302, 303, 307, 308}, resp.StatusCode) {
-			location, ok := resp.Headers["Location"]
+			location, ok := resp.Headers["location"]
 			if ok {
 				return next(location, body, headers)
 			}

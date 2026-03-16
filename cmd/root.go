@@ -14,7 +14,10 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if searchQuery, _ := cmd.Flags().GetString("search"); searchQuery != "" {
-			cli.HandleSearch(cmd, args)
+			cli.HandleSearchDynamic(cmd, args)
+		}
+		if url, _ := cmd.Flags().GetString("url"); url != "" {
+			cli.HandleUrlRequest(cmd, args)
 		}
 	},
 }
@@ -30,6 +33,10 @@ func init() {
 
 	rootCmd.Flags().StringP("search", "s", "", "Search the web with a query")
 	rootCmd.Flags().StringP("engine", "e", "startpage", "Search engine to use (e.g., startpage, mojeek)")
+	rootCmd.Flags().StringP("url", "u", "", "Fetch and display the content of a URL")
+
+	rootCmd.MarkFlagsMutuallyExclusive("search", "url") // you can't use search and url together
+	rootCmd.Flags().BoolP("no-cache", "", false, "Disable caching")
 
 	OnlyValidWith(rootCmd, "engine", "search") // you can only use engine if search is provided
 
@@ -45,7 +52,4 @@ func OnlyValidWith(cmd *cobra.Command, dependentFlag, requiredFlag string) error
 	}
 	return nil
 }
-
-
-
 

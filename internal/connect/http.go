@@ -72,9 +72,10 @@ func parseURL(url string) (string, string, int, bool) {
 		secured = true
 		port = 443
 	} else {
-		// Default to HTTP port 80 if no protocol is provided
-		secured = false
-		port = 80
+		// Default to HTTPS if no protocol is provided
+		// Most modern sites require HTTPS; assume secured by default.
+		secured = true
+		port = 443
 	}
 
 	// 2. Split Host and Path
@@ -203,7 +204,9 @@ func ParseRawToResponse(raw []byte) (*HttpResponse, error) {
 		}
 		parts := strings.SplitN(strings.TrimSpace(line), ":", 2)
 		if len(parts) == 2 {
-			resp.Headers[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+			// Normalizing header keys to lowercase to avoid case-sensitivity issues
+			headerKey := strings.ToLower(strings.TrimSpace(parts[0]))
+			resp.Headers[headerKey] = strings.TrimSpace(parts[1])
 		}
 	}
 

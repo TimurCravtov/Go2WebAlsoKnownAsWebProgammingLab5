@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-
 type CacheEntry struct {
 	ValidUntil time.Time     `json:"valid_until"`
 	Response   *HttpResponse `json:"response"`
@@ -85,9 +84,9 @@ func (c *FileCache) doCache(cacheFile string, resp *HttpResponse) {
 	// Default: do not cache unless we find a directive
 	var duration time.Duration = 0
 
-	if val, ok := headers["Cache-Control"]; ok {
+	if val, ok := headers["cache-control"]; ok {
 		// Look for max-age=<seconds>
-		if strings.Contains(val, "no-store") || strings.Contains(val, "private") {
+		if strings.Contains(strings.ToLower(val), "no-store") || strings.Contains(strings.ToLower(val), "private") {
 			return // Respect "no-store" or "private" by not caching
 		}
 
@@ -102,7 +101,7 @@ func (c *FileCache) doCache(cacheFile string, resp *HttpResponse) {
 
 	// Fallback to Expires header if max-age is missing
 	if duration == 0 {
-		if expVal, ok := headers["Expires"]; ok {
+		if expVal, ok := headers["expires"]; ok {
 			if expTime, err := http.ParseTime(expVal); err == nil {
 				duration = time.Until(expTime)
 			}

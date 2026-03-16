@@ -37,41 +37,42 @@ type searchModel struct {
 	loading  bool
 	err      error
 	selected *html.SearchResult
+	height   int
 
 	// hero banner (rendered once)
 	hero string
 }
 
 func HandleSearch(cmd *cobra.Command, args []string) {
-    searchQuery, _ := cmd.Flags().GetString("search")
-    if searchQuery == "" {
-        return
-    }
-    // select engine
-    engineName, _ := cmd.Flags().GetString("engine")
-    var engine html.Search
-    switch engineName {
-    case "startpage":
-        engine = search_engines.NewStartpageSearchEngine("https://www.startpage.com/sp/search?query=")
-    case "mojeek":
-        engine = search_engines.NewMojeekSearchEngine("https://www.mojeek.com/search?q=")
-    default:
-        fmt.Printf("Unknown search engine: %s\n", engineName)
-        return
-    }
-    fmt.Println(buildHero(engineName, searchQuery))
-    // execute
-    results, err := engine.Search(searchQuery, 1, connect.Get)
-    if err != nil {
-        fmt.Printf("Error: %v\n", err)
-        return
-    }
-    // print results
-    for i, result := range results {
-        fmt.Printf("%d. %s\n", i+1, result.Title)
-        fmt.Printf("   URL: %s\n", html.Colorize(result.URL, html.ColorBlue))
-        fmt.Println("   " + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─")
-    }
+	searchQuery, _ := cmd.Flags().GetString("search")
+	if searchQuery == "" {
+		return
+	}
+	// select engine
+	engineName, _ := cmd.Flags().GetString("engine")
+	var engine html.Search
+	switch engineName {
+	case "startpage":
+		engine = search_engines.NewStartpageSearchEngine("https://www.startpage.com/sp/search?query=")
+	case "mojeek":
+		engine = search_engines.NewMojeekSearchEngine("https://www.mojeek.com/search?q=")
+	default:
+		fmt.Printf("Unknown search engine: %s\n", engineName)
+		return
+	}
+	fmt.Println(buildHero(engineName, searchQuery))
+	// execute
+	results, err := engine.Search(searchQuery, 1, connect.Get)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+	// print results
+	for i, result := range results {
+		fmt.Printf("%d. %s\n", i+1, result.Title)
+		fmt.Printf("   URL: %s\n", html.Colorize(result.URL, html.ColorBlue))
+		fmt.Println("   " + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─" + "─")
+	}
 }
 
 func newSearchModel(engineName, query string, engine html.Search) searchModel {
@@ -94,6 +95,9 @@ func (m searchModel) Init() tea.Cmd {
 
 func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		m.height = msg.Height
 
 	case searchResultsMsg:
 		m.loading = false
@@ -152,7 +156,32 @@ func (m searchModel) View() string {
 		sb.WriteString(renderSelectedPlaceholder(m.selected))
 
 	default:
-		for i, r := range m.results {
+		visibleResults := 5
+		heroLines := strings.Count(m.hero, "\n") + 1
+		if m.height > 0 {
+			available := m.height - heroLines - 4
+			if available > 3 {
+				visibleResults = available / 3
+			} else {
+				visibleResults = 1
+			}
+		}
+
+		start := m.cursor - visibleResults/2
+		if start < 0 {
+			start = 0
+		}
+		end := start + visibleResults
+		if end > len(m.results) {
+			end = len(m.results)
+			start = end - visibleResults
+			if start < 0 {
+				start = 0
+			}
+		}
+
+		for i := start; i < end; i++ {
+			r := m.results[i]
 			cursor := "  "
 			titleColor := html.ColorReset
 			if i == m.cursor {
@@ -231,7 +260,7 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 	}
 
 	m := newSearchModel(engineName, searchQuery, engine)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m)
 
 	final, err := p.Run()
 	if err != nil {
@@ -240,9 +269,15 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 	}
 
 	if fm, ok := final.(searchModel); ok && fm.selected != nil {
-		fmt.Printf("\nSelected: %s\n%s\n",
-			fm.selected.Title,
-			html.Colorize(fm.selected.URL, html.ColorBlue),
+
+		page, err := html.ParsePage(fm.selected.URL, connect.Get)
+		if err != nil {
+			fmt.Printf("Error fetching page: %v\n", err)
+			return
+		}
+
+		fmt.Printf("%s\n%s\n",
+			page,
 		)
 	}
 }
