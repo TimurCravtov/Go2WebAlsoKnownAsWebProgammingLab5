@@ -26,8 +26,15 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -v -o go2web-linux-amd64 .
 
-      - name: Upload Release Asset
+      - name: Upload Artifact (Manual Runs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: go2web-linux
+          path: go2web-linux-amd64
+
+      - name: Upload to GitHub Release (Tag Pushes)
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: go2web-linux-amd64
 
@@ -44,17 +51,22 @@ jobs:
           go-version: '1.22'
 
       - name: Build Executable
-        # Compiles the binary directly into the install directory 
-        # so Inno Setup can find it based on: Source: "go2web.exe"
+        # Outputs to scripts/ so install.iss can find it locally
         run: |
-          go build -v -o scripts/install/go2web.exe .
+          go build -v -o scripts/go2web.exe .
 
       - name: Compile Inno Setup Installer
-        # Assumes your file is named installer.iss
-        run: iscc scripts/install/installer.iss
+        # Runs the script exactly where you placed it
+        run: iscc scripts/install.iss
 
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
+      - name: Upload Artifact (Manual Runs)
+        uses: actions/upload-artifact@v4
         with:
-          # Grabs the output from the ../Output directory defined in your .iss
-          files: scripts/Output/go2web.exe
+          name: go2web-windows-installer
+          path: Output/go2web.exe
+
+      - name: Upload to GitHub Release (Tag Pushes)
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Output/go2web.exe
