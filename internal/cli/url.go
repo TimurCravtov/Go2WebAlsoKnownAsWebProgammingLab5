@@ -66,7 +66,7 @@ func HandleUrlRequest(cmd *cobra.Command, args []string) {
     
     response, err := getter(urlStr, nil, nil)
     if err != nil {
-        fmt.Printf("Error fetching page: %v\n", err)
+        slog.Error("Error fetching page", "error", err)
         return
     }
 
@@ -75,7 +75,7 @@ func HandleUrlRequest(cmd *cobra.Command, args []string) {
     contentType, err := html.GetContentType(response)
 
     if err != nil {
-        fmt.Printf("Error determining content type: %v\n", err)
+        slog.Error("Error determining content type", "error", err)
         return
     }
 

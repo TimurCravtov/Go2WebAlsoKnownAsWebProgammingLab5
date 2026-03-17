@@ -9,7 +9,7 @@ import (
 	"go2web/internal/request"
 	"go2web/internal/request/middleware"
 	"strings"
-
+    "log/slog"
 	"github.com/0magnet/calvin"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -242,7 +242,7 @@ func buildHero(engineName, query string) string {
 func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 	searchQuery, _ := cmd.Flags().GetString("search")
 	if searchQuery == "" {
-		fmt.Println("No search query provided.")
+		slog.Error("No search query provided.")
 		return
 	}
 
@@ -251,7 +251,7 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 	
 	engine, err := getEngineByName(engineName)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		slog.Error("Error initializing search engine", "error", err)
 		return
 	}
 
@@ -260,7 +260,7 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 
 	final, err := p.Run()
 	if err != nil {
-		fmt.Printf("TUI error: %v\n", err)
+		slog.Error("TUI error", "error", err)
 		return
 	}
 
@@ -272,7 +272,7 @@ func HandleSearchDynamic(cmd *cobra.Command, args []string) {
 
 		response, err := getter(fm.selected.URL, nil, nil)
 		if err != nil {
-			fmt.Printf("Error fetching page: %v\n", err)
+			slog.Error("Error fetching page", "error", err)
 			return
 		}
 
