@@ -7,6 +7,7 @@ import (
 	"go2web/internal/html/negociation"
     "go2web/internal/cli/printer"
 	"math"
+    "log/slog"
 	"strings"
     "go2web/internal/request/middleware"
 	_ "github.com/mat/besticon/ico"
@@ -42,18 +43,21 @@ func HandleUrlRequest(cmd *cobra.Command, args []string) {
     types, _ := cmd.Flags().GetStringArray("type")
 
     if len(languages) > 0 {
+        slog.Debug("Adding Accept-Language header", "values ", languages)
         getter = html.WithHeaders(
             negociation.AcceptLanguages(languages),
         )(getter)
     }
 
     if len(charsets) > 0 {
+        slog.Debug("Adding Accept-Charset header with values ", "values", charsets)
         getter = html.WithHeaders(
             negociation.AcceptCharsets(charsets),
         )(getter)
     }
 
     if len(types) > 0 {
+        slog.Debug("Adding Accept-Content-Type header with values ", "values", types)
         getter = html.WithHeaders(
             negociation.AcceptContentTypes(types),
         )(getter)
