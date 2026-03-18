@@ -46,9 +46,9 @@ go build .
 
     - [Content Negociation](#content-negociation)
 
-        [By type](#type): 
+        - [By type](#type) 
 
-        [By language](#languages)
+        - [By language](#languages)
 
     - [Image formatting](#image)
 
