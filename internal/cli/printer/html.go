@@ -10,7 +10,7 @@ import (
 	"go2web/internal/cli/printer/utils"
 )
 
-func HtmlResponseParser(urlPath string, response *request.HttpResponse) (string, error) {
+func HtmlPrinter(urlPath string, response *request.HttpResponse) (string, error) {
 
     reader := bytes.NewReader(response.Body)
 	doc, err := goquery.NewDocumentFromReader(reader)

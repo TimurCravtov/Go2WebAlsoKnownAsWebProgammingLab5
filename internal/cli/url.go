@@ -81,7 +81,7 @@ func HandleUrlRequest(cmd *cobra.Command, args []string) {
 
     switch contentType {
     case html.TypeHTML:
-        basePrinter = printer.HtmlResponseParser
+        basePrinter = printer.HtmlPrinter
     case html.TypeJSON:
 
         basePrinter = printer.JsonPrinter
