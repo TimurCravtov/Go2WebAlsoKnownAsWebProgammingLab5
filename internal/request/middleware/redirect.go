@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"fmt"
+	"go2web/internal/request"
+	"log/slog"
 	urlpkg "net/url"
 	"slices"
-	"go2web/internal/request"
 )
 
 // WithRedirects wraps a GetFunc to automatically follow HTTP redirects up to maxRedirects times.
@@ -29,7 +30,7 @@ func WithRedirects(next request.GetFunc, maxRedirects int) request.GetFunc {
 				if !ok {
 					return resp, nil
 				}
-
+				slog.Info("Redirecting initiated: ", "from", currentURL, "to", location, "status_code", resp.StatusCode)
 				// Try to resolve relative Location headers against the current URL
 				prevURL, err := urlpkg.Parse(currentURL)
 				if err == nil {
